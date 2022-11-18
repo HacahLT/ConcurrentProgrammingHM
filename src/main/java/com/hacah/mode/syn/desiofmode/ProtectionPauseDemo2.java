@@ -1,4 +1,4 @@
-package com.hacah.mode.desiofmode;
+package com.hacah.mode.syn.desiofmode;
 
 import lombok.extern.slf4j.Slf4j;
 

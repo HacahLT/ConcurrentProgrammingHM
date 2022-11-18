@@ -24,7 +24,8 @@ public class PhilosopherEat {
         Philosopher philosopher2 = new Philosopher(c2, c3, "p2");
         Philosopher philosopher3 = new Philosopher(c3, c4, "p3");
         Philosopher philosopher4 = new Philosopher(c4, c5, "p4");
-        // 修改获取锁的循序，结局死锁
+        // Philosopher philosopher5 = new Philosopher(c5, c1, "p5");
+        // 修改获取锁的循序，解决死锁
         Philosopher philosopher5 = new Philosopher(c1, c5, "p5");
         // 哲学家吃东西
         new Thread(philosopher).start();
