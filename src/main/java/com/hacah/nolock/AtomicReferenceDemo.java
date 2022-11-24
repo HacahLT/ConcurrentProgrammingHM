@@ -1,20 +1,21 @@
 package com.hacah.nolock;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-interface Account {
+interface Account2 {
     /**
      * 方法内会启动 1000 个线程，每个线程做 -10 元 的操作
      * 如果初始余额为 10000 那么正确的结果应当是 0
      */
-    static void demo(Account account) {
+    static void demo(Account2 account) {
         List<Thread> ts = new ArrayList<>();
         long start = System.nanoTime();
         for (int i = 0; i < 1000; i++) {
             ts.add(new Thread(() -> {
-                account.withdraw(10);
+                account.withdraw(new BigDecimal(10));
             }));
         }
         ts.forEach(Thread::start);
@@ -31,50 +32,46 @@ interface Account {
     }
 
     // 获取余额
-    Integer getBalance();
+    BigDecimal getBalance();
 
     // 取款
-    void withdraw(Integer amount);
+    void withdraw(BigDecimal amount);
 }
 
 /**
- * 无锁方式解决线程问题
- *
  * @author Hacah
- * @date 2022/11/22 10:23
+ * @date 2022/11/23 11:01
  */
-public class Demo1 implements Account {
-
-    private AtomicInteger balance;
-
-    public Demo1(Integer balance) {
-        this.balance = new AtomicInteger(balance);
-    }
-
+public class AtomicReferenceDemo {
     public static void main(String[] args) {
+        AccountImpl account = new AccountImpl(new BigDecimal(10000));
+        Account2.demo(account);
+    }
+}
 
-        Demo1 demo1 = new Demo1(10000);
-        Account.demo(demo1);
+class AccountImpl implements Account2 {
 
+    private AtomicReference<BigDecimal> balance;
+
+    public AccountImpl(BigDecimal balance) {
+        this.balance = new AtomicReference(balance);
     }
 
     @Override
-    public Integer getBalance() {
+    public BigDecimal getBalance() {
         return this.balance.get();
     }
 
     @Override
-    public void withdraw(Integer amount) {
-        // while (true) {
-        //     int b = balance.get();
-        //     int result = b - amount;
-        //     if (balance.compareAndSet(b, result)) {
-        //         break;
-        //     }
-        // }
-        balance.updateAndGet(operand -> operand - amount);
-
-
+    public void withdraw(BigDecimal amount) {
+        BigDecimal prv = null;
+        BigDecimal next = null;
+        do {
+            prv = balance.get();
+            next = prv.subtract(amount);
+        } while (!balance.compareAndSet(prv, next));
     }
 
 }
+
+
